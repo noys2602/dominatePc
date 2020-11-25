@@ -1,0 +1,169 @@
+import socket
+import json
+import win32api
+import win32gui
+import pyautogui
+import time
+from threading  import Thread
+from subprocess import call
+from os.path import expanduser
+import os
+
+
+
+
+
+words_list = ["", ""]
+
+def getIp() :
+    ip = socket.gethostbyname(socket.gethostname())
+    return  ip
+
+def click( x,y):
+    x=int(x)
+    y=int(y)
+    win32api.SetCursorPos((x,y))
+    #win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
+    #win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0)
+
+def takeScreenshot(action, json_var):
+
+
+    folder = expanduser(r'C:\DP screenshots')
+    if not os.path.isdir(folder):
+        os.mkdir(folder)
+
+    file_name = str(time.time()) + '_FullScreen.bmp'
+    im = pyautogui.screenshot(os.path.join(folder, file_name))
+
+
+    file_name = str(time.time()) + '_ActiveWindow.bmp'
+    hwnd = win32gui.GetForegroundWindow()
+    l, t, r, b = win32gui.GetWindowRect(hwnd)
+    im2 = pyautogui.screenshot(os.path.join(folder, file_name) ,region=(l,t,r,b))
+
+def media (action, json_var) :
+    if action == u'media_volume_up':
+        call("nircmd.exe changesysvolume 2000")
+
+    if action == u'media_volume_down':
+        call("nircmd.exe changesysvolume -2000")
+
+    if action == u'media_mute':
+        call("nircmd.exe mutesysvolume 2")
+
+    if action == u'media_play':
+        pyautogui.press('space')
+
+    if action == u'media_stop':
+        pyautogui.press('space')
+
+    if action == u'media_rewind':
+        pyautogui.press('left')
+
+    if action == u'media_forward':
+        pyautogui.press('right')
+
+def powerActions(action, json_var) :
+    if action == u'power_shutdown':
+        os.system("shutdown -s")
+
+    if action == u'power_restart':
+        os.system("shutdown -r")
+
+    if action == u'power_logout':
+        os.system("shutdown -l")
+
+    if action == u'power_sleep':
+        os.system("shutdown -h")
+
+def keyboardActions(action, json_var):
+    word = json_var['data']['text']
+    words_list[0] = word
+
+    if len(words_list[0]) >= len(words_list[1]):
+        pyautogui.typewrite(word[len(word) - 1])
+
+    else:
+        t=len(words_list[1]) - len(words_list[0])
+        while t>0 :
+            pyautogui.press('backspace')
+            t=t-1
+
+    words_list[1] = word
+
+def mouseActions (action, json_var) :
+    if action == u'mouse_move':
+        dx = json_var['data']['dx']
+        dy = json_var['data']['dy']
+        flags, hcursor, (x, y) = win32gui.GetCursorInfo()
+        click(dx + x, dy + y)
+
+    if action == u'right_click':
+        pyautogui.click(button='left')
+
+    if action == u'left_click':
+        pyautogui.click(button='right')
+
+
+
+def open_and_run_socket():
+    ip=getIp()
+    print "enter "+ ip
+    server_socket = socket.socket()
+    server_socket.bind(('0.0.0.0', 8820))
+    server_socket.listen(1)
+    (client_socket, client_address) = server_socket.accept()
+    print"hello you are connected"
+
+
+    while 1:
+        query = client_socket.recv(1024)
+        if not query: break
+        splited_query = query.split('\n')
+        for i in splited_query:
+            if len(i) > 0:
+                i = i.rstrip()
+                try:
+                    json_var = json.loads(i)
+                except:
+                  #  print(i)
+                   pass
+                action = json_var['action']
+
+                if "click" or "mouse" in action:
+                    mouseActions(action, json_var)
+
+                if "power" in action:
+                    powerActions(action, json_var)
+
+                if "media" in action:
+                    media(action, json_var)
+
+                if "screenshot" in action:
+                    takeScreenshot(action, json_var)
+
+                if "keyboard" in action:
+                    keyboardActions(action, json_var)
+    client_socket.close()
+    server_socket.close()
+    print "by by come back soon"
+
+def keep_socket_alive():
+    while 1:
+        open_and_run_socket()
+
+
+t = Thread(target=keep_socket_alive, args=())
+t.start()
+
+
+
+
+
+
+
+
+
+
+
