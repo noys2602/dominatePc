@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Dominate PC</string>
+    <string name="login">Login</string>
+    <string name="connect">connect</string>
+    <string name="keyboard_and_mouse">Keyboard and Mouse</string>
+    <string name="screencast">ScreenCast</string>
+    <string name="power">Power</string>
+    <string name="keyboard_hint">Enter text</string>
+    <string name="restart">Restart</string>
+    <string name="shutdown">Shutdown</string>
+    <string name="sleep">Sleep</string>
+    <string name="logout">Logout</string>
+    <string name="power_warning_message">You you will probabley need to connect again after using one of those options</string>
+    <string name="screenshot">Screenshot</string>
+    <string name="save">save</string>
+    <string name="take">take</string>
+</resources>
